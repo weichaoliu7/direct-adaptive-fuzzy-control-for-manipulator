@@ -290,7 +290,6 @@ void CONTROLLER_init(){
             controller.theta[k][j] = 0.0; // initialize fuzzy controller parameter
         }
     }
-
 }
 
 double CONTROLLER_realize(int i){
@@ -549,7 +548,6 @@ void saveArchive(){
 }
 
 int main(){
-
 
     SystemInput(&q1_desired, &qd1_1, &qd1_2, &dq1_desired, &dqd1_1, &dqd1_2, &ddq1_desired, &ddqd1_1, &ddqd1_2, &q2_desired, &qd2_1, &qd2_2, &dq2_desired, &dqd2_1, &dqd2_2, &ddq2_desired, &ddqd2_1, &ddqd2_2, Ts, t0, t1);
     CONTROLLER_init(); // initialize controller parameter
