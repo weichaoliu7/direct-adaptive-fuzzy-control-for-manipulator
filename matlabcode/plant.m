@@ -27,39 +27,41 @@ str=[];
 ts=[];
 
 function sys=mdlDerivatives(t,x,u)
-control = [u(1);u(2)];
+l = 1; % 1ength of link
+m1 = 1; % mass of link 1
+m2 = 2; % mass of link 2
+g = 9.41; % gravitational acceleration
 
-m1 = 1;
-me = 2;
-l1 = 1;
-lc1 = 0.5;
-lce = 0.6;
-I1 = 0.12;
-Ie = 0.25;
-theta_e = pi/6;
-
-a1 = I1 + m1 * lc1^2 + Ie + me * lce^2 + me * l1^2;
-a2 = Ie + me * lce^2;
-a3 = me * l1 *lce * cos(theta_e);
-a4 = me * l1 * lce * sin(theta_e);
+kv1=0.3; % coefficient of viscous friction
+kc1=0.2; % coefficient of coulomb friction
+kv2=0.5;
+kc2=0.5;
 
 % inertia matrix for manipulator dynamics equation
-M(1,1) = a1 + 2 * a3 * cos(x(3)) + 2 * a4 * sin(x(3));
-M(1,2) = a2 + a3 * cos(x(3)) + a4 * sin(x(3));
-M(2,1) = M(1,2);
-M(2,2) = a2;
+D(1,1) = 1/3 * m1 * l^2 + 4/3 * m2 * l^2 + m2 * l^2 * cos(x(3));
+D(1,2) = 1/3 * m2 * l^2 + 1/2 * m2 * l^2 * cos(x(3));
+D(2,1) = D(1,2);
+D(2,2) = 1/3 * m2 * l^2;
 
-% Coriolis and centrifugal matrix for manipulator dynamics equation
-h = a3 * sin(x(3)) - a4 * cos(x(3));
-C(1,1) = -h * x(4);
-C(1,2) = -h * (x(2) + x(4));
-C(2,1) = h * x(2);
+% Coriolis and centrifugal matrix for manipulator dynamics equation 
+C(1,1) = -m2 * l^2 * sin(x(3)) * x(4);
+C(1,2) = -1/2 * m2 * l^2 * sin(x(3)) * x(4);
+C(2,1) = 1/2 * m2 * l^2 * sin(x(3)) * x(2);
 C(2,2) = 0;
 
-dq = [x(2);x(4)]; % actual angular velocity of manipulator
-f = - inv(M) * C * dq; % unknown smooth nonlinear function f(x)
-G = inv(M); % unknown smooth nonlinear function G(x)
-S = f + G * control; % angular acceleration, manipulator dynamic system compact form, Eq. 2
+% gravitational torque matrix for manipulator dynamics equation 
+G(1) = 1/2 * m1 * g * l * cos(x(1)) + 1/2 * m2 * g * l * cos(x(1)+x(3)) + m2 * g * l * cos(x(1));
+G(2) = 1/2 * m2 * g * l * cos(x(1)+x(3));
+
+Fv(1) = kv1 * x(2); % viscous friction torque
+Fv(2) = kv2 * x(4);
+
+Fc(1) = kc1 * sign(x(2)); % coulomb friction torque
+Fc(2) = kc2 * sign(x(4));
+
+torque=u(1:2); % control input torque
+dq=[x(2);x(4)];
+S=inv(D)*(torque-C*dq-G'-Fv'-Fc'); % angular acceleration, from manipulator dynamics equation
 
 sys(1)=x(2); % dq1
 sys(2)=S(1); % ddq1
